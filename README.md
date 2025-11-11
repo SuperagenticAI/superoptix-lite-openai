@@ -1,8 +1,8 @@
 # OpenAI Agents SDK + GEPA Optimization Demo
 
-> **Build self-optimizing AI agents with OpenAI SDK and automated prompt engineering**
+> **Build self-optimizing AI agents with OpenAI SDK and automated prompt Optimization with GEPA**
 
-This is a complete working example showing how to build AI agents using the official OpenAI Agents SDK and optimize them automatically with GEPA (Genetic Evaluation-based Prompt Augmentation) from SuperOptiX.
+This is a complete working example showing how to build AI agents using the official [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) and optimize them automatically with [GEPA](https://github.com/gepa-ai/gepa) (Genetic Parito) and [SuperOptiX](https://superoptix.ai) Lite version.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -15,7 +15,7 @@ This is a complete working example showing how to build AI agents using the offi
 - **Complete Code Reviewer Agent** - Production-ready agent that detects security issues, memory leaks, and performance problems
 - **GEPA Optimization Demo** - Automated prompt engineering example (custom implementation)
 - **BDD Test Scenarios** - Measurable evaluation with behavior-driven tests
-- **100% Local** - Works with Ollama (no API keys needed!)
+- **100% Local** - Works with Ollama (no API keys needed!) API Key can be configured
 - **Auto-Loading** - Optimized prompts load automatically after training
 - **Standalone** - Includes minimal SuperOptiX components (no external dependencies)
 
@@ -28,23 +28,16 @@ This is a complete working example showing how to build AI agents using the offi
 ### 1. Prerequisites
 
 ```bash
-# Install Ollama from https://ollama.ai
+# Install Ollama from https://ollama.com
 
-# Pull models - choose any models you prefer!
-# Example options:
-ollama pull gpt-oss:20b       # Fast, good quality (recommended for task)
-ollama pull gpt-oss:120b      # Slower, best quality (for reflection or task)
-ollama pull llama3.1:8b       # Fastest (for quick experiments)
-
-# Recommended configurations:
-# - Balanced: gpt-oss:20b (task) + gpt-oss:20b (reflection)
-# - Quality: gpt-oss:20b (task) + gpt-oss:120b (reflection)
-# - Speed: gpt-oss:20b (task) + llama3.1:8b (reflection)
+# Pull required models
+ollama pull gpt-oss:20b      # For agent execution
+ollama pull llama3.1:8b       # For GEPA optimization
 ```
 
 **System Requirements:**
 - Python 3.11+
-- 16GB+ RAM (32GB+ recommended for gpt-oss:120b)
+- 16GB+ RAM recommended
 - Ollama running locally
 
 ### 2. Install
@@ -62,36 +55,18 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Try the Demo (Baseline)
+### 3. Run the Demo
 
 ```bash
-# Try the code reviewer with baseline instructions
+# Try the live code review demo
 python demo_optimized_agent.py
 ```
 
-This will demonstrate the agent reviewing 4 code samples with baseline instructions:
+This will demonstrate the agent reviewing 4 code samples and detecting:
 - ✅ SQL injection vulnerabilities
 - ✅ Memory leaks
 - ✅ Missing error handling
 - ✅ Performance issues (O(n²) algorithms)
-
-**Note:** First run uses baseline instructions. Run the optimization (step 4) to improve performance!
-
-### 4. Run GEPA Optimization (Optional)
-
-```bash
-# Optimize the agent's instructions using GEPA
-python optimize_code_reviewer.py
-```
-
-This will:
-1. ✅ Evaluate baseline performance (runs all BDD test scenarios)
-2. ✅ Analyze failures and identify missing keywords
-3. ✅ Generate improved instructions
-4. ✅ Test the improved version
-5. ✅ Save optimized weights (if improved)
-
-After optimization completes, run `python demo_optimized_agent.py` again to see the agent using optimized instructions!
 
 ---
 
@@ -132,6 +107,24 @@ Recommendations:
 3. Validate and sanitize all user input
 ...
 ```
+
+### Run GEPA Optimization
+
+```bash
+# Optimize the agent's instructions
+python optimize_code_reviewer.py
+```
+
+GEPA will:
+1. ✅ Evaluate baseline performance (runs all BDD test scenarios)
+2. ✅ Analyze failures and identify missing keywords
+3. ✅ Generate improved instructions
+4. ✅ Test the improved version
+5. ✅ Save optimized weights (if improved)
+
+After optimization, the agent automatically loads improved instructions on next run.
+
+---
 
 ## 🏗️ Project Structure
 
@@ -263,59 +256,6 @@ if optimized_file.exists():
 
 ---
 
-## ⚙️ Customizing Models
-
-You can easily customize which models to use for the agent and GEPA optimization:
-
-### 1. Change Agent Model
-
-Edit the playbook YAML file:
-
-```yaml
-# openai_gepa/openai_gepa/agents/code_reviewer/playbook/code_reviewer_playbook.yaml
-spec:
-  language_model:
-    provider: ollama
-    model: ollama:gpt-oss:120b    # ← Change this to any Ollama model
-    api_base: http://localhost:11434
-```
-
-### 2. Change GEPA Reflection Model
-
-Edit the same playbook YAML file:
-
-```yaml
-# openai_gepa/openai_gepa/agents/code_reviewer/playbook/code_reviewer_playbook.yaml
-optimization:
-  optimizer:
-    reflection_lm: ollama:gpt-oss:120b    # ← Change reflection model here
-```
-
-**Model Selection Tips:**
-
-- **Same models**: Use the same model for both (e.g., gpt-oss:20b) for consistency
-- **Stronger reflection**: Use a larger model for reflection (e.g., gpt-oss:120b) for better optimization quality
-- **Faster optimization**: Use a smaller model for reflection (e.g., llama3.1:8b) for speed
-- **Any Ollama model**: Works with any model available in Ollama
-
-**Example Configurations:**
-
-```yaml
-# Quality-focused (slower, better results)
-model: ollama:gpt-oss:20b
-reflection_lm: ollama:gpt-oss:120b
-
-# Balanced (good speed and quality)
-model: ollama:gpt-oss:20b
-reflection_lm: ollama:gpt-oss:20b
-
-# Speed-focused (faster, good enough)
-model: ollama:gpt-oss:20b
-reflection_lm: ollama:llama3.1:8b
-```
-
----
-
 ## 🎯 Creating Your Own Agent
 
 ### Step 1: Define Playbook with BDD Tests
@@ -432,13 +372,15 @@ OPENAI_API_KEY is not set, skipping trace export
 [non-fatal] Tracing client error 401
 ```
 
-The agent works perfectly with local Ollama models without any API keys.
+The agent works perfectly with local Ollama models without any API keys. The API key can be also configured in the playbook to use the cloud based models (coming in next version)
 
 ---
 
 ## 📊 Performance Results
 
 ### Code Reviewer Agent
+
+Results varies depneding on the models used.
 
 | Metric | Value |
 |--------|-------|
@@ -497,12 +439,14 @@ See the [SuperOptiX documentation](https://docs.super-agentic.ai) for complete f
 ### Documentation
 
 - **[OpenAI Agents SDK](https://github.com/openai/agents-sdk)** - Official SDK documentation
-- **[SuperOptiX](https://docs.super-agentic.ai)** - Full GEPA optimization framework
-- **[Ollama](https://ollama.ai)** - Local LLM inference
+- **[GEPA](https://github.com/gepa-ai/gepa)** - Official Github Repo
+- **[SuperOptiX](https://superoptix.ai)** - Official Webpage
+- **[SuperOptiX Docs](https://superagenticai.github.io/superoptix-ai/)** - Docs Full Stack Agent Optimization framework
+- **[Ollama](https://ollama.com)** - Local LLM inference
 
 ### Tutorials
 
-For a complete step-by-step tutorial on building agents with OpenAI SDK and optimizing with GEPA, see the [SuperOptiX documentation](https://docs.super-agentic.ai/tutorials/openai-sdk-gepa-optimization).
+For a complete step-by-step tutorial on building agents with OpenAI SDK and optimizing with GEPA, see the [SuperOptiX documentation](https://superagenticai.github.io/superoptix-ai).
 
 ---
 
@@ -526,14 +470,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 🙏 Acknowledgments
 
 - **OpenAI Agents SDK** - Excellent agent framework
-- **SuperOptiX** - GEPA optimization capabilities
+- **GEPA** - Best Optimizer in the AI industry right now
+- **SuperOptiX** - GEPA optimization and Agent Framework orchestration capabilities
 - **Ollama** - Making local LLM inference accessible
 
 ---
 
 <div align="center">
 
-**Made with ❤️ using OpenAI Agents SDK and SuperOptiX**
+**Made with ❤️ using OpenAI Agents SDK, GEPA and SuperOptiX**
 
 Give it a ⭐ if you find this helpful!
 
