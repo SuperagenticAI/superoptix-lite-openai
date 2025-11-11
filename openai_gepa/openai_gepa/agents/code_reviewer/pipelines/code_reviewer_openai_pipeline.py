@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from pathlib import Path
 import yaml
 import json
+import os
 
 from agents import Agent, Runner, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
@@ -29,25 +30,27 @@ class CodeReviewerAgent:
         instructions: str,
         model: str = "gpt-oss:20b",
         api_base: str = "http://localhost:11434",
-        temperature: float = 0.3
+        temperature: float = 0.3,
+        api_key: str = "ollama"
     ):
         """
         Initialize the code reviewer agent.
 
         Args:
             instructions: System instructions for the agent
-            model: Model name (for Ollama, without 'ollama:' prefix)
-            api_base: Ollama API base URL
+            model: Model name (without provider prefix)
+            api_base: API base URL (Ollama, OpenAI, etc.)
             temperature: Model temperature
+            api_key: API key (ollama for local, actual key for cloud)
         """
         self.instructions = instructions
 
-        # Initialize Ollama model using OpenAI Agents SDK
+        # Initialize model using OpenAI Agents SDK (works with OpenAI-compatible APIs)
         self.model = OpenAIChatCompletionsModel(
             model=model,
             openai_client=AsyncOpenAI(
-                base_url=f"{api_base}/v1",
-                api_key="ollama",  # Ollama doesn't need real key
+                base_url=f"{api_base}/v1" if not api_base.endswith("/v1") else api_base,
+                api_key=api_key,
             ),
         )
 
@@ -158,23 +161,89 @@ class CodeReviewerComponent(BaseComponent):
 
         return "\n".join(parts)
 
+    def _apply_env_overrides(self, config: Dict) -> Dict:
+        """
+        Apply environment variable overrides to model configuration.
+
+        Supported environment variables:
+        - AGENT_MODEL: Override model name
+        - AGENT_PROVIDER: Override provider (ollama, openai, anthropic, google)
+        - AGENT_API_BASE: Override API base URL
+        - AGENT_TEMPERATURE: Override temperature
+        - OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY: API keys
+
+        Returns:
+            Updated configuration dict
+        """
+        config = config.copy()
+
+        # Override model
+        if os.getenv("AGENT_MODEL"):
+            config["model"] = os.getenv("AGENT_MODEL")
+            print(f"ℹ️  Using model from AGENT_MODEL: {config['model']}")
+
+        # Override provider
+        if os.getenv("AGENT_PROVIDER"):
+            config["provider"] = os.getenv("AGENT_PROVIDER")
+            print(f"ℹ️  Using provider from AGENT_PROVIDER: {config['provider']}")
+
+        # Override API base
+        if os.getenv("AGENT_API_BASE"):
+            config["api_base"] = os.getenv("AGENT_API_BASE")
+            print(f"ℹ️  Using API base from AGENT_API_BASE: {config['api_base']}")
+
+        # Override temperature
+        if os.getenv("AGENT_TEMPERATURE"):
+            config["temperature"] = float(os.getenv("AGENT_TEMPERATURE"))
+            print(f"ℹ️  Using temperature from AGENT_TEMPERATURE: {config['temperature']}")
+
+        # Auto-detect API base from provider if not explicitly set
+        if config.get("provider") == "openai" and "AGENT_API_BASE" not in os.environ:
+            config["api_base"] = "https://api.openai.com/v1"
+        elif config.get("provider") == "anthropic" and "AGENT_API_BASE" not in os.environ:
+            config["api_base"] = "https://api.anthropic.com"
+        elif config.get("provider") == "google" and "AGENT_API_BASE" not in os.environ:
+            config["api_base"] = "https://generativelanguage.googleapis.com"
+
+        return config
+
     def _initialize_agent(self):
         """Lazy initialization of the native OpenAI SDK agent."""
         if self._agent is not None:
             return
 
+        # Apply environment variable overrides
+        config = self._apply_env_overrides(self._model_config)
+
         # Extract model config
-        model_str = self._model_config.get("model", "ollama:gpt-oss:20b")
+        model_str = config.get("model", "ollama:gpt-oss:20b")
         model_name = model_str.replace("ollama:", "")
-        api_base = self._model_config.get("api_base", "http://localhost:11434")
-        temperature = self._model_config.get("temperature", 0.3)
+        api_base = config.get("api_base", "http://localhost:11434")
+        temperature = config.get("temperature", 0.3)
+        provider = config.get("provider", "ollama")
+
+        # Determine API key based on provider
+        api_key = "ollama"  # Default for Ollama
+        if provider == "openai":
+            api_key = os.getenv("OPENAI_API_KEY", "")
+            if not api_key:
+                print("⚠️  Warning: OPENAI_API_KEY not set. Set it with: export OPENAI_API_KEY=sk-...")
+        elif provider == "anthropic":
+            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+            if not api_key:
+                print("⚠️  Warning: ANTHROPIC_API_KEY not set. Set it with: export ANTHROPIC_API_KEY=sk-ant-...")
+        elif provider == "google":
+            api_key = os.getenv("GOOGLE_API_KEY", "")
+            if not api_key:
+                print("⚠️  Warning: GOOGLE_API_KEY not set.")
 
         # Create native OpenAI SDK agent
         self._agent = CodeReviewerAgent(
             instructions=self.variable,  # Use GEPA-optimizable variable
             model=model_name,
             api_base=api_base,
-            temperature=temperature
+            temperature=temperature,
+            api_key=api_key
         )
 
     async def run_async(self, code: str, language: str = "unknown") -> Dict[str, str]:

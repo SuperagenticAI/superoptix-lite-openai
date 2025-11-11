@@ -15,9 +15,10 @@ This is a complete working example showing how to build AI agents using the offi
 - **Complete Code Reviewer Agent** - Production-ready agent that detects security issues, memory leaks, and performance problems
 - **GEPA Optimization Demo** - Automated prompt engineering example (custom implementation)
 - **Agent Spec Scenarios (Agent Evals)** - Measurable evaluation with scripted agent evaluations
-- **100% Local** - Works with Ollama (no API keys needed!) API Key can be configured
+- **100% Local OR Cloud** - Works with Ollama (free!) or cloud models (OpenAI, Anthropic, Google)
 - **Auto-Loading** - Optimized prompts load automatically after training
 - **Standalone** - Includes minimal SuperOptiX components (no external dependencies)
+- **Cost-Conscious** - Clear warnings and estimates for cloud API costs
 
 > **Note**: This demo includes `superoptix_lite` - minimal components needed for GEPA-style optimization. For production use with full SuperOptiX features, install: `pip install superoptix[frameworks-openai]`
 
@@ -57,12 +58,42 @@ pip install -r requirements.txt
 
 ### 3. Run the Demo
 
+#### Option A: Local Models (FREE)
+
 ```bash
-# Try the live code review demo
-python demo_optimized_agent.py
+# Try the live code review demo with FREE local Ollama models
+python demo_local.py
 ```
 
-This will demonstrate the agent reviewing 4 code samples and detecting:
+#### Option B: Cloud Models (OpenAI, Anthropic, Google)
+
+**Method 1: Using .env file (recommended)**
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env and add your API key
+# OPENAI_API_KEY=sk-...
+
+# Load environment variables and run
+source .env
+python demo_cloud.py
+```
+
+**Method 2: Direct export**
+```bash
+# Set your API key (choose one)
+export OPENAI_API_KEY=sk-...
+# OR
+export ANTHROPIC_API_KEY=sk-ant-...
+# OR
+export GOOGLE_API_KEY=...
+
+# Run cloud demo
+python demo_cloud.py
+```
+
+Both demos will demonstrate the agent reviewing 4 code samples and detecting:
 - ✅ SQL injection vulnerabilities
 - ✅ Memory leaks
 - ✅ Missing error handling
@@ -110,10 +141,40 @@ Recommendations:
 
 ### Run GEPA Optimization
 
+#### Option A: Local Models (FREE)
+
 ```bash
-# Optimize the agent's instructions
-python optimize_code_reviewer.py
+# Optimize with FREE local Ollama models
+python optimize_local.py
 ```
+
+#### Option B: Cloud Models (with API costs)
+
+**Method 1: Using .env file (recommended)**
+```bash
+# Copy and edit .env file
+cp .env.example .env
+# Edit .env and add your API key
+
+# Load environment variables and run
+source .env
+python optimize_cloud.py
+```
+
+**Method 2: Direct export**
+```bash
+# Set your API key (choose one)
+export OPENAI_API_KEY=sk-...        # Uses gpt-5
+# OR
+export ANTHROPIC_API_KEY=sk-ant-... # Uses claude-sonnet-4.5
+# OR
+export GOOGLE_API_KEY=...           # Uses gemini-pro-2.5
+
+# Run cloud optimization
+python optimize_cloud.py
+```
+
+**⚠️ Cost Warning:** Cloud optimization uses cloud APIs and will incur costs. The process runs multiple evaluations to improve the agent. Local Ollama models are completely free!
 
 GEPA will:
 1. ✅ Evaluate baseline performance (runs all Agent Spec scenarios)
@@ -136,8 +197,10 @@ superoptix-lite-openai/
 ├── LICENSE                                    # MIT License
 ├── requirements.txt                           # Python dependencies
 │
-├── optimize_code_reviewer.py                  # Run GEPA optimization
-├── demo_optimized_agent.py                    # Live agent demo
+├── demo_local.py                              # Live demo with LOCAL models (FREE)
+├── demo_cloud.py                              # Live demo with CLOUD models
+├── optimize_local.py                          # GEPA optimization with LOCAL models (FREE)
+├── optimize_cloud.py                          # GEPA optimization with CLOUD models
 │
 └── openai_gepa/                               # Main project
     ├── pyproject.toml                         # Package configuration
@@ -258,6 +321,86 @@ if optimized_file.exists():
 
 ---
 
+## ☁️ Using Cloud Models (OpenAI, Anthropic, Google)
+
+If you can't run local models with Ollama, you can use cloud-based models. We've made this **super simple** with dedicated scripts for each mode.
+
+### Quick Start with Cloud Models
+
+**Step 1:** Get an API key from one of these providers:
+- **OpenAI**: https://platform.openai.com/api-keys
+- **Anthropic**: https://console.anthropic.com/
+- **Google AI**: https://makersuite.google.com/app/apikey
+
+**Step 2:** Set your API key using either method:
+
+**Option A: .env file (recommended)**
+```bash
+cp .env.example .env
+# Edit .env and uncomment/add your API key
+source .env
+```
+
+**Option B: Direct export**
+```bash
+export OPENAI_API_KEY=sk-...
+# OR
+export ANTHROPIC_API_KEY=sk-ant-...
+# OR
+export GOOGLE_API_KEY=...
+```
+
+**Step 3:** Run the cloud scripts:
+
+```bash
+# Demo with cloud models (auto-detects provider from API key)
+python demo_cloud.py
+
+# Optimize with cloud models (⚠️ will incur API costs)
+python optimize_cloud.py
+```
+
+That's it! The scripts automatically:
+- ✅ Detect which cloud provider to use based on your API key
+- ✅ Use the latest models (gpt-5, claude-sonnet-4.5, gemini-pro-2.5)
+- ✅ Configure everything for you
+
+### ⚠️ IMPORTANT: Cost Warning
+
+**Cloud optimization uses APIs and will incur costs!** The optimization process:
+- Evaluates test scenarios multiple times
+- Makes many API calls to improve the agent
+- Costs vary by provider and model
+
+**Tips to reduce costs:**
+1. ✅ **Use local models (Ollama) - completely free!** (Recommended)
+2. ✅ Test with `demo_cloud.py` first (cheaper) before running `optimize_cloud.py`
+3. ✅ Only run optimization when needed
+4. ✅ Consider using local optimization: `python optimize_local.py` (FREE!)
+
+### Supported Cloud Providers
+
+| Provider | Latest Model | Script Auto-Detects |
+|----------|-------------|---------------------|
+| **OpenAI** | gpt-5 | ✅ From `OPENAI_API_KEY` |
+| **Anthropic** | claude-sonnet-4.5 | ✅ From `ANTHROPIC_API_KEY` |
+| **Google** | gemini-pro-2.5 | ✅ From `GOOGLE_API_KEY` |
+
+### Local vs Cloud Comparison
+
+| Aspect | Local (Ollama) | Cloud (APIs) |
+|--------|---------------|--------------|
+| **Setup** | Download models (one-time) | Get API key (instant) |
+| **Demo** | FREE | Uses API credits |
+| **Optimization** | FREE | Uses API credits |
+| **Hardware** | 16GB+ RAM required | No requirements |
+| **Privacy** | 100% local | Data sent to API |
+| **Commands** | `python demo_local.py`<br>`python optimize_local.py` | `python demo_cloud.py`<br>`python optimize_cloud.py` |
+
+**Recommendation:** Use local Ollama models for development and testing. Only use cloud models if you can't run local models or need specific cloud capabilities.
+
+---
+
 ## 🎯 Creating Your Own Agent
 
 ### Step 1: Define Playbook with Agent Spec Scenarios
@@ -374,8 +517,7 @@ OPENAI_API_KEY is not set, skipping trace export
 [non-fatal] Tracing client error 401
 ```
 
-The agent works perfectly with local Ollama models without any API keys. The API key can be also configured in the playbook to use the cloud based models (coming in next version)
-
+The agent works perfectly with local Ollama models without any API keys.
 ---
 
 ## 📊 Performance Results
