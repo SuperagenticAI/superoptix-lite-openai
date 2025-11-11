@@ -1,0 +1,111 @@
+apiVersion: agent/v1
+kind: AgentSpec
+metadata:
+  name: assistant_openai
+  id: assistant_openai
+  namespace: demo
+  version: 1.0.0
+  level: oracles
+  description: Simple Q&A assistant built with OpenAI Agents SDK, optimized for Ollama
+    local models
+  author: SuperOptiX
+  tags:
+  - assistant
+  - openai-sdk
+  - ollama
+  - local-first
+  - simple-qa
+spec:
+  target_framework: openai
+  language_model:
+    location: local
+    provider: ollama
+    model: ollama:gpt-oss:20b
+    temperature: 0.7
+    max_tokens: 2000
+    api_base: http://localhost:11434
+  input_fields:
+  - name: query
+    type: str
+    description: User's question or request
+    required: true
+  output_fields:
+  - name: response
+    type: str
+    description: Assistant's answer
+    required: true
+  persona:
+    name: Helpful AI Assistant
+    role: Helpful AI Assistant
+    goal: Provide clear, concise, and helpful responses to user queries
+    backstory: 'You are a friendly and knowledgeable AI assistant designed to help
+      users
+
+      with questions, explanations, and general information. You excel at breaking
+
+      down complex topics into understandable answers.
+
+      '
+    traits:
+    - helpful
+    - friendly
+    - knowledgeable
+    - concise
+  reasoning:
+    method: direct
+    steps:
+    - Understand the user's question
+    - Provide a clear and helpful answer
+    - Be concise but complete
+  constraints:
+  - Keep responses concise
+  - Be factual and accurate
+  - Ask for clarification if needed
+  feature_specifications:
+    feature_name: Simple Q&A Assistant
+    feature_description: Test basic question answering and conversation
+    scenarios:
+    - name: Simple greeting
+      description: Should respond warmly to greetings
+      input:
+        query: Hello! How are you?
+      expected_output:
+        expected_keywords:
+        - hello
+        - help
+    - name: Question answering
+      description: Should answer factual questions accurately
+      input:
+        query: What is Python?
+      expected_output:
+        expected_keywords:
+        - Python
+        - programming
+        - language
+    - name: Explanation request
+      description: Should provide clear explanations
+      input:
+        query: Explain what an API is
+      expected_output:
+        expected_keywords:
+        - API
+        - application
+        - interface
+    - name: Math question
+      description: Should handle basic calculations
+      input:
+        query: What is 15 multiplied by 7?
+      expected_output:
+        expected_keywords:
+        - '105'
+  optimization:
+    optimizer:
+      name: GEPA
+      params:
+        metric: response_accuracy
+        auto: medium
+        reflection_lm: ollama:llama3.1:8b
+        max_full_evals: 5
+        skip_perfect_score: true
+    metric: response_accuracy
+    metric_threshold: 0.8

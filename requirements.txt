@@ -1,0 +1,15 @@
+# OpenAI Agents SDK + GEPA Demo - Standalone Requirements
+# This demo includes minimal SuperOptiX components (superoptix_lite)
+# For production use, install full SuperOptiX: pip install superoptix[frameworks-openai]
+
+# OpenAI Agents SDK (official framework)
+openai-agents>=0.4.0
+openai>=1.0.0
+
+# Configuration and data handling
+pydantic>=2.0.0
+pyyaml>=6.0.0
+
+# Optional: For development/testing
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
