@@ -14,7 +14,7 @@ This is a complete working example showing how to build AI agents using the offi
 
 - **Complete Code Reviewer Agent** - Production-ready agent that detects security issues, memory leaks, and performance problems
 - **GEPA Optimization Demo** - Automated prompt engineering example (custom implementation)
-- **BDD Test Scenarios** - Measurable evaluation with behavior-driven tests
+- **Agent Spec Scenarios (Agent Evals)** - Measurable evaluation with scripted agent evaluations
 - **100% Local** - Works with Ollama (no API keys needed!) API Key can be configured
 - **Auto-Loading** - Optimized prompts load automatically after training
 - **Standalone** - Includes minimal SuperOptiX components (no external dependencies)
@@ -37,15 +37,15 @@ ollama pull llama3.1:8b       # For GEPA optimization
 
 **System Requirements:**
 - Python 3.11+
-- 16GB+ RAM recommended
+- 32GB+ RAM recommended if running 20b models 
 - Ollama running locally
 
 ### 2. Install
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
-cd openai_superoptix
+git clone https://github.com/SuperagenticAI/superoptix-lite-openai.git
+cd superoptix-lite-openai
 
 # Create virtual environment
 python3 -m venv venv
@@ -116,7 +116,7 @@ python optimize_code_reviewer.py
 ```
 
 GEPA will:
-1. ✅ Evaluate baseline performance (runs all BDD test scenarios)
+1. ✅ Evaluate baseline performance (runs all Agent Spec scenarios)
 2. ✅ Analyze failures and identify missing keywords
 3. ✅ Generate improved instructions
 4. ✅ Test the improved version
@@ -124,17 +124,19 @@ GEPA will:
 
 After optimization, the agent automatically loads improved instructions on next run.
 
+> ℹ️ The optimized instructions are saved to `openai_gepa/openai_gepa/agents/code_reviewer/optimized/code_reviewer_openai_optimized.json`. The pipeline will load from this location on subsequent runs.
+
 ---
 
 ## 🏗️ Project Structure
 
 ```
-openai_superoptix/
+superoptix-lite-openai/
 ├── README.md                                  # This file
 ├── LICENSE                                    # MIT License
 ├── requirements.txt                           # Python dependencies
 │
-├── optimize_code_reviewer.py                 # Run GEPA optimization
+├── optimize_code_reviewer.py                  # Run GEPA optimization
 ├── demo_optimized_agent.py                    # Live agent demo
 │
 └── openai_gepa/                               # Main project
@@ -143,7 +145,7 @@ openai_superoptix/
         └── agents/
             ├── code_reviewer/                 # ⭐ Code reviewer agent
             │   ├── playbook/
-            │   │   └── code_reviewer_playbook.yaml       # Config + BDD tests
+            │   │   └── code_reviewer_playbook.yaml       # Config + Agent Spec scenarios
             │   ├── pipelines/
             │   │   └── code_reviewer_openai_pipeline.py  # Agent code
             │   └── optimized/
@@ -210,9 +212,9 @@ class CodeReviewerComponent(BaseComponent):
 
 > **Note**: This demo includes `superoptix_lite` - a minimal implementation of SuperOptiX's BaseComponent. For production use with full GEPA capabilities, install the complete SuperOptiX framework.
 
-### 3. BDD Test Scenarios
+### 3. Agent Spec Scenarios (Agent Evals)
 
-Performance measured with test scenarios in the playbook:
+Performance measured with Agent Spec scenarios in the playbook:
 
 ```yaml
 feature_specifications:
@@ -258,7 +260,7 @@ if optimized_file.exists():
 
 ## 🎯 Creating Your Own Agent
 
-### Step 1: Define Playbook with BDD Tests
+### Step 1: Define Playbook with Agent Spec Scenarios
 
 ```yaml
 # my_agent_playbook.yaml
@@ -329,7 +331,7 @@ class MyPipeline:
         self.test_scenarios = self._load_bdd_scenarios()
 
     def evaluate(self):
-        # Run all test scenarios and measure pass rate
+        # Run all Agent Spec scenarios and measure pass rate
         pass
 ```
 
@@ -354,7 +356,7 @@ curl http://localhost:11434/api/tags
 
 ```bash
 # Ensure you're in the right directory and venv is activated
-cd openai_superoptix
+cd superoptix-lite-openai
 source venv/bin/activate
 
 # Reinstall dependencies

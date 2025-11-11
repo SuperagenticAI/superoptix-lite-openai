@@ -117,7 +117,7 @@ print(f"   Improvement: {improved_score - baseline_score:+.2%}")
 if improved_score >= baseline_score:
     print("\n💾 Saving optimized instructions...")
 
-    optimized_dir = Path('openai_gepa/agents/code_reviewer/optimized')
+    optimized_dir = Path('openai_gepa/openai_gepa/agents/code_reviewer/optimized')
     optimized_dir.mkdir(parents=True, exist_ok=True)
 
     optimized_file = optimized_dir / 'code_reviewer_openai_optimized.json'
