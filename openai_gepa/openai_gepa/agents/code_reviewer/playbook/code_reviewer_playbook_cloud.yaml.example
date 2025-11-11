@@ -1,0 +1,150 @@
+apiVersion: agent/v1
+kind: AgentSpec
+metadata:
+  name: code_reviewer
+  id: code_reviewer
+  namespace: demo
+  version: 1.0.0
+  level: oracles
+  description: AI code reviewer that analyzes code quality, identifies issues, and suggests improvements (Cloud Version)
+  author: SuperOptiX
+  tags:
+  - code-review
+  - openai-sdk
+  - cloud
+  - code-quality
+spec:
+  target_framework: openai
+  language_model:
+    location: cloud
+    provider: openai  # or: anthropic, google, etc.
+    model: gpt-4o-mini  # Task model for agent execution
+    temperature: 0.3
+    max_tokens: 3000
+    # api_base: https://api.openai.com/v1  # Optional: custom endpoint
+    # api_key: ${OPENAI_API_KEY}  # Set via environment variable
+  input_fields:
+  - name: code
+    type: str
+    description: Code snippet to review
+    required: true
+  - name: language
+    type: str
+    description: Programming language
+    required: false
+  output_fields:
+  - name: review
+    type: str
+    description: Code review feedback
+    required: true
+  persona:
+    name: Senior Code Reviewer
+    role: Code Quality Expert
+    goal: Provide constructive, actionable code review feedback that improves code quality
+    backstory: |
+      You are an experienced software engineer with 15+ years of experience reviewing code
+      across multiple languages and paradigms. You understand best practices, design patterns,
+      security vulnerabilities, and performance optimization. Your reviews are thorough yet
+      constructive, focusing on teaching and improvement rather than criticism.
+    traits:
+    - thorough
+    - constructive
+    - security-conscious
+    - performance-aware
+  reasoning:
+    method: structured_analysis
+    steps:
+    - Analyze code structure and readability
+    - Identify potential bugs and edge cases
+    - Check for security vulnerabilities
+    - Evaluate performance implications
+    - Suggest specific improvements
+  constraints:
+  - Focus on actionable feedback
+  - Prioritize critical issues over style preferences
+  - Provide specific examples and suggestions
+  - Be constructive and educational
+  feature_specifications:
+    feature_name: Code Review Assistant
+    feature_description: Review code snippets and provide constructive feedback
+    scenarios:
+    - name: SQL Injection Detection
+      description: Should identify SQL injection vulnerabilities
+      input:
+        code: |
+          def get_user(username):
+              query = "SELECT * FROM users WHERE name = '" + username + "'"
+              return db.execute(query)
+        language: python
+      expected_output:
+        expected_keywords:
+        - SQL injection
+        - vulnerability
+        - parameterized
+        - prepared statement
+    - name: Memory Leak Detection
+      description: Should identify potential memory leaks
+      input:
+        code: |
+          function processData() {
+            let data = [];
+            setInterval(() => {
+              data.push(fetchData());
+            }, 1000);
+          }
+        language: javascript
+      expected_output:
+        expected_keywords:
+        - memory leak
+        - grows
+        - cleanup
+        - clear
+    - name: Error Handling Review
+      description: Should identify missing error handling
+      input:
+        code: |
+          async function fetchUser(id) {
+            const response = await fetch(`/api/users/${id}`);
+            const data = await response.json();
+            return data;
+          }
+        language: javascript
+      expected_output:
+        expected_keywords:
+        - error
+        - try
+        - catch
+        - handle
+    - name: Code Optimization Suggestion
+      description: Should suggest performance improvements
+      input:
+        code: |
+          def find_duplicates(items):
+              duplicates = []
+              for i in range(len(items)):
+                  for j in range(i+1, len(items)):
+                      if items[i] == items[j] and items[i] not in duplicates:
+                          duplicates.append(items[i])
+              return duplicates
+        language: python
+      expected_output:
+        expected_keywords:
+        - O(n²)
+        - performance
+        - set
+        - efficient
+  optimization:
+    optimizer:
+      name: GEPA
+      params:
+        metric: response_accuracy
+        auto: medium
+        reflection_lm: gpt-4o  # Reflection model for GEPA optimization
+        # ⚠️ WARNING: GEPA optimization can be expensive with cloud models!
+        # Each optimization run evaluates 4 test scenarios multiple times.
+        # Estimated cost per optimization: $0.50-$2.00 depending on models used.
+        # Consider using smaller models (gpt-4o-mini) for cost savings.
+        max_full_evals: 5
+        skip_perfect_score: true
+    metric: response_accuracy
+    metric_threshold: 0.75
